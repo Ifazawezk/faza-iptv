@@ -7,7 +7,7 @@ WORK="$ROOT/android/.build"
 VERSION="$(node -p "require('$ROOT/package.json').version")"
 
 rm -rf "$WORK"
-npx --yes cordova@12.0.0 create "$WORK" io.github.iptvplayer.app "IPTV Player"
+npx --yes cordova@12.0.0 create "$WORK" io.github.ifazawezk.fazaiptv "Faza IPTV"
 sed "s/version=\"1.0.0\"/version=\"$VERSION\"/" "$ROOT/android/config.xml" > "$WORK/config.xml"
 rm -rf "$WORK/www"
 cp -r "$ROOT/public" "$WORK/www"
@@ -19,5 +19,5 @@ npx --yes cordova@12.0.0 platform add android@13.0.0
 npx --yes cordova@12.0.0 build android --debug
 
 mkdir -p "$ROOT/dist"
-cp platforms/android/app/build/outputs/apk/debug/app-debug.apk "$ROOT/dist/IPTV-Player-$VERSION-android.apk"
-echo "APK: $ROOT/dist/IPTV-Player-$VERSION-android.apk"
+cp platforms/android/app/build/outputs/apk/debug/app-debug.apk "$ROOT/dist/Faza-IPTV-$VERSION-android.apk"
+echo "APK: $ROOT/dist/Faza-IPTV-$VERSION-android.apk"

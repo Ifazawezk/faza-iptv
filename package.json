@@ -1,6 +1,6 @@
 {
-  "name": "iptv-player",
-  "productName": "IPTV Player",
+  "name": "faza-iptv",
+  "productName": "Faza IPTV",
   "version": "1.0.0",
   "description": "Free, open-source IPTV player for M3U playlists and Xtream Codes - Windows, macOS, Linux, Android and any phone browser.",
   "license": "MIT",
@@ -16,8 +16,8 @@
     "electron-builder": "25.1.8"
   },
   "build": {
-    "appId": "io.github.iptvplayer.app",
-    "productName": "IPTV Player",
+    "appId": "io.github.ifazawezk.fazaiptv",
+    "productName": "Faza IPTV",
     "files": [
       "electron/**",
       "public/**",
@@ -36,22 +36,22 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "IPTV-Player-Setup-${version}.${ext}"
+      "artifactName": "Faza-IPTV-Setup-${version}.${ext}"
     },
     "portable": {
-      "artifactName": "IPTV-Player-Portable-${version}.${ext}"
+      "artifactName": "Faza-IPTV-Portable-${version}.${ext}"
     },
     "mac": {
       "target": "dmg",
       "icon": "build/icon.png",
       "category": "public.app-category.video",
-      "artifactName": "IPTV-Player-${version}-mac.${ext}"
+      "artifactName": "Faza-IPTV-${version}-mac.${ext}"
     },
     "linux": {
       "target": "AppImage",
       "icon": "build/icon.png",
       "category": "Video",
-      "artifactName": "IPTV-Player-${version}-linux.${ext}"
+      "artifactName": "Faza-IPTV-${version}-linux.${ext}"
     }
   }
 }

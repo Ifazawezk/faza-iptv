@@ -14,7 +14,7 @@ function createWindow() {
     minHeight: 500,
     backgroundColor: '#0b0f17',
     autoHideMenuBar: true,
-    title: 'IPTV Player',
+    title: 'Faza IPTV',
     icon: path.join(__dirname, '..', 'build', 'icon.png'),
     webPreferences: {
       webSecurity: false, // allow cross-origin playlists/streams (this window only loads our own files)

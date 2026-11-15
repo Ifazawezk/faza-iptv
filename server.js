@@ -1,4 +1,4 @@
-// IPTV Player - local server (no npm dependencies, Node 18+)
+// Faza IPTV - local server (no npm dependencies, Node 18+)
 // Serves the web UI and proxies playlists/streams so the browser isn't blocked by CORS.
 const http = require('http');
 const fs = require('fs');
@@ -174,7 +174,7 @@ const server = http.createServer((req, res) => {
 const LAN = process.argv.includes('--lan');
 server.listen(PORT, LAN ? '0.0.0.0' : '127.0.0.1', () => {
   const link = `http://localhost:${PORT}`;
-  console.log(`\n  IPTV Player running at ${link}`);
+  console.log(`\n  Faza IPTV running at ${link}`);
   if (LAN) {
     const ips = Object.values(require('os').networkInterfaces()).flat()
       .filter(i => i && i.family === 'IPv4' && !i.internal).map(i => i.address);

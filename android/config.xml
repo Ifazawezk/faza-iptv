@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="io.github.iptvplayer.app" version="1.0.0"
+<widget id="io.github.ifazawezk.fazaiptv" version="1.0.0"
         xmlns="http://www.w3.org/ns/widgets"
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>IPTV Player</name>
+    <name>Faza IPTV</name>
     <description>Free, open-source IPTV player for M3U playlists and Xtream Codes.</description>
-    <author href="https://github.com">IPTV Player contributors</author>
+    <author href="https://github.com">Faza IPTV contributors</author>
     <content src="index.html" />
     <access origin="*" />
     <allow-intent href="http://*/*" />

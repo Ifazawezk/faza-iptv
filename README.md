@@ -1,9 +1,9 @@
-# IPTV Player
+# Faza IPTV
 
 A free, open-source IPTV player for **Windows, macOS, Linux, Android** and **any phone browser**.
 Bring your own playlist: an **Xtream Codes** login (server + username + password) or an **M3U / M3U8** link or file.
 
-![IPTV Player](docs/screenshot.png)
+![Faza IPTV](docs/screenshot.png)
 
 ## Features
 
@@ -24,11 +24,11 @@ Go to **[Releases](../../releases/latest)** and pick your file:
 
 | Device | File |
 |---|---|
-| Windows (installer) | `IPTV-Player-Setup-x.y.z.exe` |
-| Windows (no install) | `IPTV-Player-Portable-x.y.z.exe` |
-| macOS | `IPTV-Player-x.y.z-mac.dmg` (first launch: right-click › Open) |
-| Linux | `IPTV-Player-x.y.z-linux.AppImage` |
-| Android | `IPTV-Player-x.y.z-android.apk` (allow "install unknown apps") |
+| Windows (installer) | `Faza-IPTV-Setup-x.y.z.exe` |
+| Windows (no install) | `Faza-IPTV-Portable-x.y.z.exe` |
+| macOS | `Faza-IPTV-x.y.z-mac.dmg` (first launch: right-click › Open) |
+| Linux | `Faza-IPTV-x.y.z-linux.AppImage` |
+| Android | `Faza-IPTV-x.y.z-android.apk` (allow "install unknown apps") |
 | iPhone / iPad | use *Phone mode* below |
 
 Windows may show "Windows protected your PC" because the app isn't code-signed. Click **More info › Run anyway**.

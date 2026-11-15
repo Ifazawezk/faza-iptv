@@ -1,6 +1,6 @@
 {
-  "name": "IPTV Player",
-  "short_name": "IPTV",
+  "name": "Faza IPTV",
+  "short_name": "Faza IPTV",
   "description": "Free, open-source IPTV player for M3U playlists and Xtream Codes.",
   "start_url": "./",
   "display": "standalone",

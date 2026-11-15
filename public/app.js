@@ -1,5 +1,5 @@
 'use strict';
-/* IPTV Player - front end. Talks to the local server (server.js) for playlists and streams. */
+/* Faza IPTV - front end. Talks to the local server (server.js) for playlists and streams. */
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -459,7 +459,7 @@ function setOverlayLoading(msg) {
 }
 function showWelcome() {
   overlay.dataset.mode = 'welcome';
-  setOverlay(`<div class="box"><h3>Welcome to IPTV Player</h3>
+  setOverlay(`<div class="box"><h3>Welcome to Faza IPTV</h3>
     <p>Add your IPTV subscription (Xtream Codes login or an M3U link/file) to start watching.</p>
     <button class="primary" id="welcomeAdd">+ Add playlist</button></div>`);
   $('#welcomeAdd').onclick = openAdd;
