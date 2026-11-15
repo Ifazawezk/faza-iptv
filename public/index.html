@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f17">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IPTV Player">
+  <title>IPTV Player</title>
+  <link rel="icon" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+  <script src="vendor/hls.min.js"></script>
+  <script src="vendor/mpegts.min.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><img src="icon.svg" alt=""> <span>IPTV Player</span></div>
+    <div class="source">
+      <select id="sourceSel" title="Your playlists"></select>
+      <button id="addBtn" class="primary">+ Add</button>
+      <button id="refreshBtn" class="icon" title="Reload playlist from the provider">&#x27F3;</button>
+      <button id="delBtn" class="icon" title="Remove this playlist">&#x2715;</button>
+    </div>
+    <input id="search" class="search" type="search" placeholder="Search  ( / )" autocomplete="off">
+    <div id="acct" class="acct"></div>
+  </header>
+
+  <main class="layout">
+    <aside class="groups">
+      <div class="tabs" id="tabs"></div>
+      <input id="groupSearch" class="gsearch" type="search" placeholder="Filter groups" autocomplete="off">
+      <div class="glist" id="groups"></div>
+    </aside>
+
+    <section class="chlist">
+      <div class="chhead" id="chhead"><span id="listTitle">Channels</span><span id="listCount" class="muted"></span></div>
+      <div id="channels" class="channels"></div>
+    </section>
+
+    <section class="stage">
+      <div class="player" id="playerBox">
+        <video id="video" controls playsinline></video>
+        <div class="overlay" id="overlay"></div>
+      </div>
+      <div class="info" id="info"></div>
+      <div class="keys muted">Keys: <b>&uarr;/&darr;</b> change channel &middot; <b>F</b> fullscreen &middot; <b>M</b> mute &middot; <b>/</b> search</div>
+    </section>
+  </main>
+
+  <dialog id="addDlg">
+    <form id="addForm" method="dialog">
+      <h2>Add IPTV playlist</h2>
+      <div class="seg" id="modeSeg">
+        <button type="button" data-mode="xtream" class="on">Xtream Codes login</button>
+        <button type="button" data-mode="url">M3U link</button>
+        <button type="button" data-mode="file">M3U file</button>
+      </div>
+      <label>Name <input name="name" placeholder="My IPTV"></label>
+      <div class="mode" data-mode="xtream">
+        <label>Server URL <input name="server" placeholder="http://example.com:8080"></label>
+        <div class="row">
+          <label>Username <input name="user" autocomplete="off"></label>
+          <label>Password <input name="pass" type="password" autocomplete="off"></label>
+        </div>
+      </div>
+      <div class="mode" data-mode="url" hidden>
+        <label>Playlist link (.m3u / .m3u8) <input name="url" placeholder="http://provider.com/get.php?username=...&amp;password=...&amp;type=m3u_plus"></label>
+        <p class="hint">A <code>get.php?username=…&amp;password=…</code> link is detected as Xtream automatically (adds Movies, Series and TV guide).</p>
+      </div>
+      <div class="mode" data-mode="file" hidden>
+        <label>Playlist file <input name="file" type="file" accept=".m3u,.m3u8,.txt"></label>
+      </div>
+      <p class="err" id="addErr"></p>
+      <div class="actions">
+        <div class="demo">
+          <span class="muted">No subscription? Try free public channels:</span>
+          <button type="button" class="ghost" data-demo="ara">Arabic</button>
+          <button type="button" class="ghost" data-demo="news">World news</button>
+        </div>
+        <button type="button" class="ghost" id="cancelBtn">Cancel</button>
+        <button type="submit" class="primary" id="saveBtn">Add</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "name": "iptv-player",
+  "productName": "IPTV Player",
+  "version": "1.0.0",
+  "description": "Free, open-source IPTV player for M3U playlists and Xtream Codes - Windows, macOS, Linux, Android and any phone browser.",
+  "license": "MIT",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "node server.js --open",
+    "phone": "node server.js --lan --open",
+    "desktop": "electron .",
+    "dist": "electron-builder --publish never"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "io.github.iptvplayer.app",
+    "productName": "IPTV Player",
+    "files": [
+      "electron/**",
+      "public/**",
+      "build/icon.png"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "IPTV-Player-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "IPTV-Player-Portable-${version}.${ext}"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.png",
+      "category": "public.app-category.video",
+      "artifactName": "IPTV-Player-${version}-mac.${ext}"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png",
+      "category": "Video",
+      "artifactName": "IPTV-Player-${version}-linux.${ext}"
+    }
+  }
+}

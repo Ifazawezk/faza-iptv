@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="io.github.iptvplayer.app" version="1.0.0"
+        xmlns="http://www.w3.org/ns/widgets"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>IPTV Player</name>
+    <description>Free, open-source IPTV player for M3U playlists and Xtream Codes.</description>
+    <author href="https://github.com">IPTV Player contributors</author>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+
+    <!-- Load the UI from file:// so the player may read playlists/streams from any IPTV server
+         (same idea as the desktop app). -->
+    <preference name="AndroidInsecureFileModeEnabled" value="true" />
+    <preference name="OverrideUserAgent" value="VLC/3.0.20 LibVLC/3.0.20" />
+    <preference name="android-minSdkVersion" value="24" />
+    <preference name="BackgroundColor" value="0xff0b0f17" />
+    <preference name="Orientation" value="default" />
+    <preference name="AndroidWindowSplashScreenBackground" value="#0b0f17" />
+
+    <platform name="android">
+        <!-- Most IPTV streams are plain http:// -->
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:usesCleartextTraffic="true" />
+        </edit-config>
+        <icon src="res/icon.png" />
+    </platform>
+</widget>
