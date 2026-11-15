@@ -1,6 +1,6 @@
 # Faza IPTV
 
-A free, open-source IPTV player for **Windows, macOS, Linux, Android** and **any phone browser**.
+A free, open-source IPTV player for **Windows, macOS, Linux, Android, TVs** and **any phone browser**.
 Bring your own playlist: an **Xtream Codes** login (server + username + password) or an **M3U / M3U8** link or file.
 
 ![Faza IPTV](docs/screenshot.png)
@@ -11,7 +11,8 @@ Bring your own playlist: an **Xtream Codes** login (server + username + password
 - **M3U playlists** from a link or a file (`get.php?username=…` links are detected as Xtream automatically)
 - Channel groups, fast search across thousands of channels, **favorites** and **recently watched**
 - Plays **HLS (.m3u8)**, **MPEG-TS (.ts)**, MP4 and MKV, and falls back automatically between formats
-- Keyboard: <kbd>↑</kbd>/<kbd>↓</kbd> change channel · <kbd>F</kbd> fullscreen · <kbd>M</kbd> mute · <kbd>/</kbd> search
+- **TV mode**: big text and full remote-control navigation (arrows, OK, Back, Channel +/-). Turns on automatically on TVs, or press the **TV** button
+- Keyboard: arrows move · <kbd>Enter</kbd> play (twice = fullscreen) · <kbd>Esc</kbd> back · <kbd>F</kbd> fullscreen · <kbd>M</kbd> mute · <kbd>/</kbd> search
 - Phone-friendly layout that can be installed to the home screen
 - Everything stays on your device. No account, no tracking, no ads.
 
@@ -28,10 +29,34 @@ Go to **[Releases](../../releases/latest)** and pick your file:
 | Windows (no install) | `Faza-IPTV-Portable-x.y.z.exe` |
 | macOS | `Faza-IPTV-x.y.z-mac.dmg` (first launch: right-click › Open) |
 | Linux | `Faza-IPTV-x.y.z-linux.AppImage` |
-| Android | `Faza-IPTV-x.y.z-android.apk` (allow "install unknown apps") |
-| iPhone / iPad | use *Phone mode* below |
+| Android phones & tablets | `Faza-IPTV-x.y.z-android.apk` (allow "install unknown apps") |
+| Android TV, Google TV, Fire TV | same `.apk`, see *TVs* below |
+| iPhone / iPad, Samsung & LG TVs | use the *hosted version* or *Phone mode* below |
 
 Windows may show "Windows protected your PC" because the app isn't code-signed. Click **More info › Run anyway**.
+
+## TVs
+
+- **Android TV / Google TV / Fire TV**: install the `.apk`. On Fire TV, install the free **Downloader** app, enter the `.apk` link from Releases and install it. On Android TV / Google TV, use *Send files to TV* or a USB stick. Faza IPTV then appears in the TV's app row.
+- **Samsung (Tizen) / LG (webOS) / other smart TVs**: open the TV's web browser and go to your *hosted version* address (below). TV mode turns on automatically.
+- Remote: arrows move, **OK** plays (OK again = fullscreen), **Back** returns, **Channel +/-** or **Up/Down** in fullscreen changes channel.
+
+## Hosted version (free, always on, any device)
+
+Put your own copy online for free on Cloudflare (always on, no sleeping, servers worldwide). Then any phone, PC or TV browser can use it from anywhere and install it like an app:
+
+1. Make a free account at [dash.cloudflare.com](https://dash.cloudflare.com/sign-up).
+2. In the project folder run:
+   ```bash
+   cd cloudflare
+   npx wrangler login                      # opens the browser once
+   npx wrangler secret put ACCESS_KEY      # choose your password (long and unique)
+   npx wrangler deploy                     # prints your address, e.g. https://faza-iptv.<you>.workers.dev
+   ```
+3. Open the address, sign in with your password, then **Add to Home Screen** / **Install app**.
+
+Security: everything (app, playlists and streams) sits behind your password. Devices stay signed in with a signed, HttpOnly cookie, so the password never appears in links. Changing `ACCESS_KEY` signs every device out. Your playlists and logins are stored only on each device, never on the server.
+Free-plan limits: 100,000 requests a day. That is plenty for a household, since one live channel uses about 600 requests an hour.
 
 ## Phone mode (iPhone, iPad and any phone on your Wi-Fi)
 
@@ -59,9 +84,10 @@ Pushing a tag like `v1.0.1` makes GitHub Actions build every app and publish a r
 
 ## How it works
 
-Browsers block most IPTV streams (plain `http://` and no CORS headers), so the app runs in one of two modes:
+Browsers block most IPTV streams (plain `http://` and no CORS headers), so the app runs in one of three modes:
 
 - **Server mode** (`server.js`, zero dependencies): a tiny local server serves the UI and relays playlists and streams. It rewrites HLS playlists so every segment goes through it as well.
+- **Hosted mode** (`cloudflare/worker.js`): the same relay running on Cloudflare's network, behind a password.
 - **Direct mode** (desktop and Android apps): the UI is loaded from local files inside an app shell that is allowed to reach any server, so no relay is needed.
 
 Playback uses [hls.js](https://github.com/video-dev/hls.js) and [mpegts.js](https://github.com/xqq/mpegts.js) (both Apache-2.0, bundled in `public/vendor`), or the native player on Safari / iPhone.

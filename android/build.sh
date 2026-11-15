@@ -13,6 +13,7 @@ rm -rf "$WORK/www"
 cp -r "$ROOT/public" "$WORK/www"
 mkdir -p "$WORK/res"
 cp "$ROOT/build/icon.png" "$WORK/res/icon.png"
+cp "$ROOT/build/tv_banner.png" "$WORK/res/tv_banner.png"
 
 cd "$WORK"
 npx --yes cordova@12.0.0 platform add android@13.0.0
