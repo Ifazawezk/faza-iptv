@@ -1,0 +1,216 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+:root { --bg: #0b0f17; --blue: #3b82f6; --violet: #7c3aed; --sky: #60a5fa; --lilac: #a78bfa; --text: #eef2fb; --muted: #9fb0cf; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+  font-family: "Segoe UI", system-ui, "Segoe UI Arabic", sans-serif; }
+body.transparent { background: transparent; }
+.grad { background: linear-gradient(90deg, var(--sky), var(--lilac)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stage { position: absolute; inset: 0; overflow: hidden; }
+.bgfx { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 0%, #131c33 0%, #0b0f17 60%); }
+.glow { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .55; }
+.glow.a { width: 60vmax; height: 60vmax; left: -15vmax; top: -20vmax; background: #2541a8; }
+.glow.b { width: 55vmax; height: 55vmax; right: -18vmax; bottom: -22vmax; background: #5b21b6; }
+.grid { position: absolute; inset: 0; opacity: .07;
+  background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
+  background-size: 6vmin 6vmin; mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 70%); }
+.logo { display: block; filter: drop-shadow(0 2vmin 5vmin rgba(59,130,246,.45)); }
+.wm { font-weight: 800; letter-spacing: -.02em; line-height: 1; white-space: nowrap; }
+.wm b { letter-spacing: .08em; }
+.center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+/* device frames */
+.laptop { position: relative; }
+.laptop .scr { border: .9vmin solid #1d2333; border-bottom-width: 1.4vmin; border-radius: 1.6vmin 1.6vmin .6vmin .6vmin; background: #000; overflow: hidden; box-shadow: 0 4vmin 9vmin rgba(0,0,0,.6), 0 0 0 .15vmin #2c3550; }
+.laptop .scr img { display: block; width: 100%; }
+.laptop .base { height: 1.6vmin; margin: 0 -6%; background: linear-gradient(#2a3247, #151a27); border-radius: 0 0 2vmin 2vmin; }
+.phone { position: relative; border: 1.1vmin solid #11151f; border-radius: 5vmin; overflow: hidden; background: #000; box-shadow: 0 4vmin 9vmin rgba(0,0,0,.65), 0 0 0 .25vmin #2c3550; }
+.phone img { display: block; width: 100%; }
+.tvset { position: relative; }
+.tvset .scr { border: .7vmin solid #0d1018; border-radius: .8vmin; overflow: hidden; background: #000; box-shadow: 0 4vmin 9vmin rgba(0,0,0,.6), 0 0 0 .15vmin #2c3550; }
+.tvset .scr img { display: block; width: 100%; }
+.tvset .stand { width: 26%; height: 2.2vmin; margin: 0 auto; background: linear-gradient(#232a3c, #141925); clip-path: polygon(12% 0, 88% 0, 100% 100%, 0 100%); }
+.chip { display: inline-flex; align-items: center; gap: 1.2vmin; padding: 1.6vmin 2.6vmin; border-radius: 99vmin; background: rgba(255,255,255,.06); border: .2vmin solid rgba(255,255,255,.12); font-weight: 600; }
+.chip i { font-style: normal; width: 3.2vmin; height: 3.2vmin; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--blue), var(--violet)); font-size: 2vmin; }
+.btn { display: inline-block; padding: 2vmin 4.5vmin; border-radius: 99vmin; background: linear-gradient(135deg, var(--blue), var(--violet)); font-weight: 700; box-shadow: 0 2vmin 5vmin rgba(91,33,182,.45); }
+.credit { position: absolute; bottom: 2.2vmin; left: 0; right: 0; text-align: center; color: #6b7a99; font-size: 1.5vmin; }
+</style></head>
+<body>
+<div id="root"></div>
+<script>
+const P = new URLSearchParams(location.search);
+const MODE = P.get('mode') || 'video';
+const W = innerWidth, H = innerHeight, PORTRAIT = H > W;
+const IMG = { desk: '../screenshots/desktop.png', phone: '../screenshots/phone.png', tv: '../screenshots/tv.png' };
+const root = document.getElementById('root');
+const BG = `<div class="bgfx"></div><div class="glow a"></div><div class="glow b"></div><div class="grid"></div>`;
+const CREDIT = 'Demo video: Big Buck Bunny © Blender Foundation (CC BY 3.0) · Channel names are fictional';
+const css = s => { const el = document.createElement('style'); el.textContent = s; document.head.appendChild(el); };
+const wm = (size, extra = '') => `<div class="wm" style="font-size:${size}${extra}">Faza <b class="grad">IPTV</b></div>`;
+const FEATURES = [['▶', 'Live TV, Movies & Series'], ['☰', 'TV guide (Now / Next)'], ['★', 'Favorites & search'], ['⌂', 'Big-screen TV mode'], ['⇄', 'Xtream Codes & M3U'], ['♥', 'Free & open source']];
+
+/* ---------------- animated promo (video) ---------------- */
+function video() {
+  const T = 15;
+  const pct = s => (s / T * 100).toFixed(2) + '%';
+  // scene visibility windows [in, out] in seconds
+  const S = { s1: [0, 2.6], s2: [2.6, 4.6], s3: [4.6, 8.2], s4: [8.2, 10.8], s5: [10.8, 13], s6: [13, 15] };
+  let k = '';
+  for (const [n, [a, b]] of Object.entries(S)) {
+    const fin = a === 0 ? '0%{opacity:1}' : `0%{opacity:0} ${pct(a)}{opacity:0} ${pct(a + .35)}{opacity:1}`;
+    const fout = b >= T ? '100%{opacity:1}' : `${pct(b - .25)}{opacity:1} ${pct(b + .1)}{opacity:0} 100%{opacity:0}`;
+    k += `@keyframes ${n}{${fin} ${fout}} .${n}{animation:${n} ${T}s linear both}`;
+  }
+  css(k + `
+    @keyframes pop{0%{opacity:0;transform:scale(.55);filter:blur(1.5vmin)}70%{opacity:1;transform:scale(1.04);filter:blur(0)}100%{opacity:1;transform:scale(1)}}
+    @keyframes rise{0%{opacity:0;transform:translateY(5vmin)}100%{opacity:1;transform:none}}
+    @keyframes riseBig{0%{opacity:0;transform:translateY(30vmin) scale(.92)}100%{opacity:1;transform:none}}
+    @keyframes fromRight{0%{opacity:0;transform:translateX(40vmin) rotate(6deg)}100%{opacity:1;transform:rotate(-3deg)}}
+    @keyframes zoom{0%{transform:scale(1)}100%{transform:scale(1.06)}}
+    @keyframes drift{0%{transform:translate(0,0)}50%{transform:translate(8vmax,6vmax)}100%{transform:translate(0,0)}}
+    @keyframes shine{0%{background-position:-100% 0}100%{background-position:200% 0}}
+    .glow.a{animation:drift 15s ease-in-out both} .glow.b{animation:drift 15s ease-in-out -7s both}
+    .an{animation-fill-mode:both;animation-timing-function:cubic-bezier(.2,.8,.2,1)}
+    .cap{font-weight:800;letter-spacing:-.01em;text-align:center}
+  `);
+  const D = (name, start, dur) => `animation-name:${name};animation-delay:${start}s;animation-duration:${dur}s`;
+  const big = PORTRAIT ? '13vmin' : '11vmin';
+  root.innerHTML = `<div class="stage">${BG}
+    <section class="center s1">
+      <img class="logo an" src="../logo/faza-icon.svg" style="width:${PORTRAIT ? 38 : 30}vmin;${D('pop', .15, .9)}">
+      <div class="an" style="margin-top:5vmin;${D('rise', .85, .7)}">${wm(big)}</div>
+    </section>
+    <section class="center s2">
+      <div class="cap an" style="font-size:${PORTRAIT ? 12 : 11}vmin;${D('rise', 2.75, .6)}">Your TV.</div>
+      <div class="cap an grad" style="font-size:${PORTRAIT ? 12 : 11}vmin;${D('rise', 3.2, .6)}">Everywhere.</div>
+    </section>
+    <section class="center s3" style="gap:5vmin">
+      <div class="cap an" style="font-size:${PORTRAIT ? 6.4 : 6}vmin;${D('rise', 4.75, .6)}">Live TV · Movies · Series</div>
+      <div class="an" style="width:${PORTRAIT ? 88 : 62}vw;${D('riseBig', 4.7, 1)}">
+        <div style="${D('zoom', 5.7, 2.6)};animation-fill-mode:both;animation-timing-function:linear" class="laptop"><div class="scr"><img src="${IMG.desk}"></div><div class="base"></div></div>
+      </div>
+      <div class="cap an" style="font-size:${PORTRAIT ? 4.2 : 3.4}vmin;color:var(--muted);font-weight:600;${D('rise', 5.4, .6)}">With a TV guide, favorites and search</div>
+    </section>
+    <section class="center s4">
+      <div class="cap an" style="position:absolute;top:${PORTRAIT ? 9 : 7}vh;font-size:${PORTRAIT ? 7.5 : 6.5}vmin;${D('rise', 8.3, .6)}">PC <span class="grad">·</span> Phone <span class="grad">·</span> TV</div>
+      <div class="an" style="position:absolute;${PORTRAIT ? 'left:6vw;top:24vh;width:84vw' : 'left:8vw;top:24vh;width:58vw'};${D('riseBig', 8.3, .9)}">
+        <div class="tvset"><div class="scr"><img src="${IMG.tv}"></div><div class="stand"></div></div></div>
+      <div class="an" style="position:absolute;${PORTRAIT ? 'right:8vw;top:44vh;width:40vw' : 'right:9vw;top:20vh;width:21vw'};${D('fromRight', 8.75, .9)}">
+        <div class="phone"><img src="${IMG.phone}"></div></div>
+    </section>
+    <section class="center s5" style="gap:3.2vmin">
+      <div class="cap an" style="font-size:${PORTRAIT ? 7.5 : 6.5}vmin;margin-bottom:2vmin;${D('rise', 10.9, .6)}">Everything you need</div>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:2.4vmin;max-width:${PORTRAIT ? 92 : 80}vw">
+        ${FEATURES.map((f, i) => `<div class="chip an" style="font-size:${PORTRAIT ? 4.4 : 3.6}vmin;${D('pop', 11.2 + i * .22, .55)}"><i>${f[0]}</i>${f[1]}</div>`).join('')}
+      </div>
+    </section>
+    <section class="center s6">
+      <img class="logo an" src="../logo/faza-icon.svg" style="width:${PORTRAIT ? 30 : 22}vmin;${D('pop', 13.05, .8)}">
+      <div class="an" style="margin-top:4vmin;${D('rise', 13.4, .6)}">${wm(PORTRAIT ? '11vmin' : '9vmin')}</div>
+      <div class="an" style="margin-top:3vmin;font-size:${PORTRAIT ? 4.6 : 3.6}vmin;color:var(--muted);font-weight:600;${D('rise', 13.7, .6)}">Free · Open source · No ads</div>
+      <div class="btn an" style="margin-top:5vmin;font-size:${PORTRAIT ? 4.6 : 3.6}vmin;${D('pop', 14.0, .6)}">Download free on GitHub</div>
+      <div class="an" style="margin-top:3vmin;font-size:${PORTRAIT ? 3.6 : 2.8}vmin;color:var(--sky);font-weight:600;${D('rise', 14.25, .5)}">github.com/Ifazawezk/faza-iptv</div>
+      <div class="credit an" style="${D('rise', 14.3, .5)}">${CREDIT}</div>
+    </section>
+  </div>`;
+  return T;
+}
+
+/* ---------------- animated logo intro ---------------- */
+function intro() {
+  const T = 4;
+  css(`
+    @keyframes tile{0%{opacity:0;transform:scale(.3) rotate(-12deg);filter:blur(2vmin)}60%{opacity:1;transform:scale(1.06) rotate(2deg);filter:blur(0)}100%{opacity:1;transform:none}}
+    @keyframes rise{0%{opacity:0;transform:translateY(5vmin)}100%{opacity:1;transform:none}}
+    @keyframes sweep{0%{transform:translateX(-120%) skewX(-20deg)}100%{transform:translateX(220%) skewX(-20deg)}}
+    .an{animation-fill-mode:both;animation-timing-function:cubic-bezier(.2,.8,.2,1)}
+    .shine{position:absolute;inset:0;overflow:hidden;border-radius:22%}
+    .shine:after{content:"";position:absolute;top:0;bottom:0;width:35%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:sweep .9s 1.3s ease-in-out both}
+  `);
+  root.innerHTML = `<div class="stage">${BG}<div class="center">
+      <div class="an" style="position:relative;width:44vmin;animation-name:tile;animation-duration:1.1s;animation-delay:.1s"><img class="logo" src="../logo/faza-icon.svg" style="width:100%"><div class="shine"></div></div>
+      <div class="an" style="margin-top:6vmin;animation-name:rise;animation-duration:.7s;animation-delay:1.2s">${wm('13vmin')}</div>
+      <div class="an" style="margin-top:3vmin;font-size:4.4vmin;color:var(--muted);font-weight:600;animation-name:rise;animation-duration:.7s;animation-delay:1.7s">Your TV. Everywhere.</div>
+  </div></div>`;
+  return T;
+}
+
+/* ---------------- static designs ---------------- */
+function banner() { // wide headers & covers
+  const safe = P.get('safe'); // youtube: keep key content in the centre band
+  const r = W / H;
+  const devices = safe ? '' : `
+    <div style="position:absolute;right:${r > 3 ? 5 : 4}%;top:50%;transform:translateY(-50%);width:${r > 2.9 ? 36 : 44}%;">
+      <div class="laptop"><div class="scr"><img src="${IMG.desk}"></div><div class="base"></div></div>
+    </div>
+    <div style="position:absolute;right:${r > 3 ? 3 : 2.5}%;top:${r > 3 ? 18 : 30}%;width:${r > 3 ? 9 : 12}%;transform:rotate(-3deg)"><div class="phone" style="border-width:${r > 3 ? .7 : .9}vmin;border-radius:3vmin"><img src="${IMG.phone}"></div></div>`;
+  const textLeft = safe ? '50%' : (P.get('left') || '8%');
+  const align = safe ? 'center' : 'left';
+  const fs = safe ? H * .10 : Math.min(H * .2, W * .065);
+  root.innerHTML = `<div class="stage">${BG}${devices}
+    <div style="position:absolute;top:50%;left:${textLeft};transform:translate(${safe ? '-50%' : '0'},-50%);text-align:${align};display:flex;flex-direction:column;align-items:${safe ? 'center' : 'flex-start'}">
+      <div style="display:flex;align-items:center;gap:${fs * .3}px">
+        <img class="logo" src="../logo/faza-icon.svg" style="width:${fs * 1.25}px">
+        <div class="wm" style="font-size:${fs}px">Faza <b class="grad">IPTV</b></div>
+      </div>
+      <div style="margin-top:${fs * .3}px;font-size:${fs * .34}px;color:var(--muted);font-weight:600">Your TV. Everywhere. &nbsp;PC · Phone · TV</div>
+      ${P.get('cta') ? `<div class="btn" style="margin-top:${fs * .35}px;font-size:${fs * .28}px;padding:${fs * .16}px ${fs * .4}px">Free & open source</div>` : ''}
+    </div></div>`;
+}
+function profile() {
+  document.body.style.background = 'linear-gradient(135deg,#3b82f6,#7c3aed)';
+  root.innerHTML = `<div class="center"><svg viewBox="0 0 64 64" style="width:62vmin"><path d="M23 13h23.5a3.5 3.5 0 0 1 0 7H30v29a3.5 3.5 0 0 1-3.5 3.5h0A3.5 3.5 0 0 1 23 49V16.5A3.5 3.5 0 0 1 26.5 13z" fill="#fff"/><path d="M33.5 27.6v12.8c0 1.9 2 3 3.6 2.1l11-6.4c1.6-.9 1.6-3.2 0-4.2l-11-6.4c-1.6-.9-3.6.2-3.6 2.1z" fill="#fff"/></svg></div>`;
+}
+function wordmark() { // horizontal logo, transparent background
+  document.body.classList.add('transparent');
+  document.documentElement.style.background = 'transparent';
+  const light = P.get('light');
+  root.innerHTML = `<div class="center" style="flex-direction:row;gap:${H * .16}px">
+    <img src="../logo/faza-icon.svg" style="width:${H * .66}px">
+    <div class="wm" style="font-size:${H * .40}px;color:${light ? '#0b0f17' : '#fff'}">Faza <b class="grad" style="${light ? 'background-image:linear-gradient(90deg,#2563eb,#7c3aed)' : ''}">IPTV</b></div></div>`;
+}
+function post() { // 1080x1080 launch post
+  root.innerHTML = `<div class="stage">${BG}
+    <div style="position:absolute;top:7vh;left:0;right:0;text-align:center">
+      <div style="display:inline-flex;align-items:center;gap:2.4vmin"><img class="logo" src="../logo/faza-icon.svg" style="width:10vmin">${wm('7.6vmin')}</div>
+      <div style="margin-top:2.6vmin;font-size:7.4vmin;font-weight:800;line-height:1.08">Your TV. <span class="grad">Everywhere.</span></div>
+    </div>
+    <div style="position:absolute;left:7vw;top:38vh;width:72vw"><div class="laptop"><div class="scr"><img src="${IMG.desk}"></div><div class="base"></div></div></div>
+    <div style="position:absolute;right:6vw;top:44vh;width:21vw;transform:rotate(-3deg)"><div class="phone" style="border-width:.9vmin;border-radius:3.6vmin"><img src="${IMG.phone}"></div></div>
+    <div style="position:absolute;bottom:5vh;left:0;right:0;text-align:center"><span class="btn" style="font-size:3.4vmin">Free · Open source · PC, Phone & TV</span></div>
+  </div>`;
+}
+function slide() { // 1080x1350 carousel / 1080x1920 story
+  const n = +P.get('n') || 1;
+  const story = H / W > 1.6;
+  const head = (t1, t2, sub) => `<div style="position:absolute;top:${story ? 9 : 7}vh;left:7vw;right:7vw;text-align:center">
+      <div style="display:inline-flex;align-items:center;gap:2vmin;margin-bottom:3.4vmin"><img class="logo" src="../logo/faza-icon.svg" style="width:7.5vmin">${wm('5.6vmin')}</div>
+      <div style="font-size:${story ? 9.6 : 8.2}vmin;font-weight:800;line-height:1.08">${t1}<br><span class="grad">${t2}</span></div>
+      ${sub ? `<div style="margin-top:2.6vmin;font-size:${story ? 4.4 : 3.8}vmin;color:var(--muted);font-weight:600">${sub}</div>` : ''}</div>`;
+  const foot = txt => `<div style="position:absolute;bottom:${story ? 7 : 5}vh;left:0;right:0;text-align:center"><span class="btn" style="font-size:${story ? 4.2 : 3.6}vmin">${txt}</span></div>`;
+  let body = '';
+  const phoneBox = (h, extra = '') => `<div class="phone" style="height:${h};border-width:.9vmin;border-radius:3.8vmin;${extra}"><img src="${IMG.phone}" style="height:100%;object-fit:cover;object-position:top"></div>`;
+  if (n === 1) body = head('Your TV.', 'Everywhere.', 'One free player for PC, phones and TVs') +
+      `<div style="position:absolute;left:5vw;top:${story ? 38 : 40}vh;width:${story ? 90 : 80}vw"><div class="tvset"><div class="scr"><img src="${IMG.tv}"></div><div class="stand"></div></div></div>
+       <div style="position:absolute;right:5vw;top:${story ? 50 : 50}vh;width:${story ? 30 : 24}vw;transform:rotate(-3deg)">${phoneBox(story ? '28vh' : '30vh')}</div>` + foot('Swipe to see more →');
+  if (n === 2) body = head('Live TV, Movies', '& Series', 'With a TV guide, favorites and fast search') +
+      `<div style="position:absolute;left:6vw;top:${story ? 40 : 40}vh;width:88vw"><div class="laptop"><div class="scr"><img src="${IMG.desk}"></div><div class="base"></div></div></div>` + foot('Xtream Codes & M3U playlists');
+  if (n === 3) body = head('Made for', 'the big screen', 'Remote-control TV mode with big, clear text') +
+      `<div style="position:absolute;left:5vw;top:${story ? 40 : 41}vh;width:90vw"><div class="tvset"><div class="scr"><img src="${IMG.tv}"></div><div class="stand"></div></div></div>` + foot('Android TV · Google TV · Fire TV · Smart TVs');
+  if (n === 4) body = head('In your', 'pocket', 'Install it like an app on any phone') +
+      `<div style="position:absolute;left:50%;top:${story ? 38 : 39.5}vh;width:${story ? 50 : 42}vw;transform:translateX(-50%)">${phoneBox(story ? "46vh" : "44vh")}</div>` + foot('Android & iPhone');
+  if (n === 5) body = `<div class="center" style="gap:2.6vmin;padding-bottom:3vh">
+      <img class="logo" src="../logo/faza-icon.svg" style="width:17vmin">${wm('9vmin')}
+      <div style="font-size:4.6vmin;color:var(--muted);font-weight:600">Free · Open source · No ads · No tracking</div>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:1.8vmin;max-width:88vw;margin-top:1vmin">${FEATURES.map(f => `<div class="chip" style="font-size:3.3vmin"><i>${f[0]}</i>${f[1]}</div>`).join('')}</div>
+      <div class="btn" style="margin-top:3vmin;font-size:4vmin">Download free on GitHub</div>
+      <div style="font-size:3.2vmin;color:var(--sky);font-weight:600">github.com/Ifazawezk/faza-iptv</div></div>`;
+  root.innerHTML = `<div class="stage">${BG}${body}<div class="credit">${CREDIT}</div></div>`;
+}
+
+const DUR = { video, intro }[MODE] ? { video, intro }[MODE]() : ({ banner, profile, wordmark, post, slide }[MODE]());
+// Deterministic frame control for capture: pause every animation and seek.
+window.seek = t => { for (const a of document.getAnimations()) { a.pause(); a.currentTime = t * 1000; } return true; };
+window.ready = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; }))]).then(() => DUR || 0);
+</script>
+</body></html>

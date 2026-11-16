@@ -5,7 +5,11 @@
 A free, open-source IPTV player for **Windows, macOS, Linux, Android, TVs** and **any phone browser**.
 Bring your own playlist: an **Xtream Codes** login (server + username + password) or an **M3U / M3U8** link or file.
 
-![Faza IPTV](docs/screenshot.png)
+![Faza IPTV on desktop](docs/screenshot.png)
+
+<p align="center"><img src="docs/phone.png" alt="Faza IPTV on a phone" width="260"></p>
+
+<sub>Screenshots use fictional demo channels; the video is *Big Buck Bunny* © Blender Foundation (CC BY 3.0).</sub>
 
 ## Features
 
@@ -43,6 +47,8 @@ Windows may show "Windows protected your PC" because the app isn't code-signed. 
 - **Samsung (Tizen) / LG (webOS) / other smart TVs**: open the TV's web browser and go to your *hosted version* address (below). TV mode turns on automatically.
 - Remote: arrows move, **OK** plays (OK again = fullscreen), **Back** returns, **Channel +/-** or **Up/Down** in fullscreen changes channel.
 
+![Faza IPTV TV mode](docs/tv.png)
+
 ## Hosted version (free, always on, any device)
 
 Put your own copy online for free on Cloudflare (always on, no sleeping, servers worldwide). Then any phone, PC or TV browser can use it from anywhere and install it like an app:
@@ -57,7 +63,9 @@ Put your own copy online for free on Cloudflare (always on, no sleeping, servers
    ```
 3. Open the address, sign in with your password, then **Add to Home Screen** / **Install app**.
 
-Security: everything (app, playlists and streams) sits behind your password. Devices stay signed in with a signed, HttpOnly cookie, so the password never appears in links. Changing `ACCESS_KEY` signs every device out. Your playlists and logins are stored only on each device, never on the server.
+Security: everything (app, playlists and streams) sits behind your password. Devices stay signed in with a signed, HttpOnly cookie, so the password never appears in links. Changing `ACCESS_KEY` signs every device out. Your playlists and logins are stored only on each device, never on the server. The relay also refuses requests from other websites, so it can't be borrowed by them.
+
+No password: deploy with `npx wrangler deploy --var REQUIRE_PASSWORD:false` and skip the `secret put` step. Anyone with your link can then open the app, which is fine for family use. Keep the link private, because the free daily request limit is shared by everyone using it.
 Free-plan limits: 100,000 requests a day. That is plenty for a household, since one live channel uses about 600 requests an hour.
 
 ## Phone mode (iPhone, iPad and any phone on your Wi-Fi)
@@ -99,6 +107,10 @@ Playback uses [hls.js](https://github.com/video-dev/hls.js) and [mpegts.js](http
 - **Picture but no sound**: the channel probably uses AC-3/E-AC-3 audio, which browsers can't decode. Use **Copy link** and open it in VLC.
 - **HTTP 403 / 458**: the subscription expired or too many devices are connected at once.
 - **A channel won't load**: it may be offline. Try *Try again* or the next channel.
+
+## Brand & social media kit
+
+Logos, profile pictures, banners for every platform, post and story images, promo videos and ready-to-post captions (English and Arabic) are in **[`brand/`](brand/)**.
 
 ## License
 

@@ -1,7 +1,9 @@
 // Faza IPTV - Cloudflare Worker (free plan, always on, runs close to every viewer).
 // Serves the web app from ../public and relays playlists/streams (same endpoints as server.js).
-// Everything is behind a password (secret ACCESS_KEY); after logging in, a signed HttpOnly cookie
-// keeps the device signed in for a year. Changing ACCESS_KEY signs every device out.
+// By default everything is behind a password (secret ACCESS_KEY); after logging in, a signed
+// HttpOnly cookie keeps the device signed in for a year. Changing ACCESS_KEY signs every device out.
+// Set the variable REQUIRE_PASSWORD to "false" to make the app open to anyone with the link.
+// Either way, the relay only answers requests made by this app's own pages (not other websites).
 
 const UA = 'VLC/3.0.20 LibVLC/3.0.20';
 const COOKIE = 'faza_auth';
@@ -20,17 +22,22 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     const p = url.pathname;
-    if (!env.ACCESS_KEY) return text('Set the ACCESS_KEY secret first: npx wrangler secret put ACCESS_KEY', 500);
+    const open = String(env.REQUIRE_PASSWORD).toLowerCase() === 'false';
+    if (!open && !env.ACCESS_KEY) return text('Set the ACCESS_KEY secret first: npx wrangler secret put ACCESS_KEY', 500);
 
-    if (p === '/login' && req.method === 'POST') return login(req, env);
-    if (p === '/logout') return redirect('/', `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
-
-    if (!(await isSignedIn(req, env))) {
-      if (PUBLIC_FILES.has(p)) return withHeaders(await env.ASSETS.fetch(req));
-      if (p === '/proxy' || p.startsWith('/api/')) return text('Sign in required', 401);
-      return loginPage();
+    if (!open) {
+      if (p === '/login' && req.method === 'POST') return login(req, env);
+      if (p === '/logout') return redirect('/', `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
+      if (!(await isSignedIn(req, env))) {
+        if (PUBLIC_FILES.has(p)) return withHeaders(await env.ASSETS.fetch(req));
+        if (p === '/proxy' || p.startsWith('/api/')) return text('Sign in required', 401);
+        return loginPage();
+      }
+    } else if (p === '/login' || p === '/logout') {
+      return redirect('/', `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
     }
 
+    if ((p === '/proxy' || p.startsWith('/api/')) && !fromThisApp(req, url)) return text('Forbidden', 403);
     if (p === '/proxy') return proxy(req, url);
     if (p === '/api/fetch') return apiFetch(req, url);
     if (p === '/api/probe') return probe(req, url);
@@ -39,6 +46,17 @@ export default {
 };
 
 /* ---------- auth ---------- */
+// Browsers label every request with where it came from. Only accept relay calls that come from
+// this app's own pages, so other websites can't embed or borrow the relay.
+function fromThisApp(req, url) {
+  const site = req.headers.get('Sec-Fetch-Site');
+  if (site) return site === 'same-origin';
+  for (const h of ['Origin', 'Referer']) {
+    const v = req.headers.get(h);
+    if (v) { try { return new URL(v).host === url.host; } catch { return false; } }
+  }
+  return true; // very old TV browsers send neither header
+}
 async function hmac(key, msg) {
   const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(msg));
