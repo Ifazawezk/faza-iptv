@@ -72,7 +72,7 @@ function loginPage(error = '', status = 200) {
 <meta name="theme-color" content="#0b0f17"><link rel="stylesheet" href="/style.css">
 <style>body{display:grid;place-items:center;min-height:100vh;padding:16px}form{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px;width:min(380px,100%);display:grid;gap:14px}
 h1{margin:0;font-size:22px;display:flex;gap:10px;align-items:center}h1 img{width:32px}input{width:100%;padding:12px;font-size:16px}button{padding:12px;font-size:16px}.err{color:var(--danger);margin:0}</style></head>
-<body><form method="post" action="/login"><h1><img src="/icon.svg" alt="">Faza IPTV</h1>
+<body><form method="post" action="/login"><h1><img src="/icon.svg" alt=""><span class="wm">Faza <b>IPTV</b></span></h1>
 <label class="muted" for="pw">Password</label><input id="pw" name="password" type="password" autocomplete="current-password" autofocus required>
 ${error ? `<p class="err">${error}</p>` : ''}<button class="primary" type="submit">Sign in</button></form></body></html>`;
   return new Response(html, { status, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', ...SECURITY_HEADERS } });

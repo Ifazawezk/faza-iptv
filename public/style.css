@@ -26,8 +26,8 @@ button {
   padding: 7px 12px; cursor: pointer;
 }
 button:hover { border-color: #33415f; background: #1c2539; }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-button.primary:hover { background: var(--accent2); }
+button.primary { background: linear-gradient(135deg, #3b82f6, #7c3aed); border-color: transparent; color: #fff; }
+button.primary:hover { background: linear-gradient(135deg, #2563eb, #6d28d9); }
 button.ghost { background: transparent; }
 button.icon { width: 34px; padding: 7px 0; }
 input, select {
@@ -41,8 +41,9 @@ input:focus, select:focus { border-color: var(--accent); }
   display: flex; align-items: center; gap: 14px; padding: 10px 14px;
   background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap;
 }
-.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; }
-.brand img { width: 26px; height: 26px; }
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 17px; letter-spacing: -.2px; }
+.brand img { width: 30px; height: 30px; }
+.wm b { font-weight: 800; letter-spacing: 1.5px; background: linear-gradient(90deg, #60a5fa, #a78bfa); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .source { display: flex; gap: 6px; align-items: center; }
 .source select { max-width: 240px; }
 .search { flex: 1; min-width: 160px; max-width: 420px; }

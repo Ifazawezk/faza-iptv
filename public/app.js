@@ -79,6 +79,7 @@ const saveSources = () => LS.set('sources', state.sources);
    relaxed, so playlists and streams are requested directly. */
 const DIRECT = location.protocol === 'file:';
 const HAS_MSE = !!(window.MediaSource || window.ManagedMediaSource);
+const HOSTED = !DIRECT && location.protocol === 'https:'; // the online (Cloudflare) version
 const uaParam = ua => (ua ? '&ua=' + encodeURIComponent(ua) : '');
 const streamSrc = (url, ua) => (DIRECT ? url : '/proxy?url=' + encodeURIComponent(url) + uaParam(ua));
 async function getText(url, ua) {
@@ -502,6 +503,8 @@ async function playPlan(ch) {
   if (DIRECT) return [['hls', ch.url], ['mpegts', ch.url], ['native', ch.url]];
   // Unknown type: ask the server to peek at the stream.
   const r = await fetch('/api/probe?url=' + encodeURIComponent(ch.url) + uaParam(ch.ua)).then(x => x.json()).catch(() => ({ ok: false, status: 0 }));
+  // Hosted version: the provider may block cloud servers but still allow this device directly.
+  if (!r.ok && HOSTED && /^https:/i.test(ch.url)) return [['hls', ch.url], ['mpegts', ch.url], ['native', ch.url]];
   if (!r.ok) {
     const e = new Error(r.status ? `HTTP ${r.status}` : (r.error || 'unreachable'));
     e.status = r.status;
@@ -515,7 +518,7 @@ async function playPlan(ch) {
 
 function explain(err) {
   const s = err && err.status;
-  if (s === 401 || s === 403) return 'The provider refused this stream (HTTP ' + s + '). Your subscription may have expired, or another device is using your connection limit.';
+  if (s === 401 || s === 403) return 'The stream refused the connection (HTTP ' + s + '). It may be blocked in your country, your subscription may have expired, or another device may be using your connection limit.';
   if (s === 404) return 'This stream was not found (HTTP 404). The channel may be offline.';
   if (s === 458 || s === 456 || s === 429) return 'Too many connections. Close the stream on other devices and try again.';
   if (s >= 500) return 'The stream server had an error (HTTP ' + s + '). Try again in a moment.';
@@ -541,12 +544,15 @@ async function play(ch) {
     return;
   }
   if (token !== state.playToken) return;
+  // Hosted version: secure (https) streams are tried straight from this device first
+  // (faster, uses your own connection); the Cloudflare relay is the fallback.
+  plan = plan.flatMap(([engine, url]) => (HOSTED && /^https:/i.test(url) ? [[engine, url, true], [engine, url, false]] : [[engine, url, false]]));
   let lastErr = null;
   const attempt = i => {
     if (token !== state.playToken) return;
     if (i >= plan.length) return showPlayError(ch, lastErr);
-    const [engine, url] = plan[i];
-    const src = streamSrc(url, ch.ua);
+    const [engine, url, direct] = plan[i];
+    const src = direct ? url : streamSrc(url, ch.ua);
     let started = false;
     const next = err => {
       if (token !== state.playToken || started) return;
@@ -586,7 +592,7 @@ async function play(ch) {
     } else if (engine === 'mpegts') {
       if (!window.mpegts || !mpegts.getFeatureList().mseLivePlayback) return next(new Error('MPEG-TS not supported'));
       ts = mpegts.createPlayer(
-        { type: 'mpegts', isLive: ch.kind === 'live', url: DIRECT ? src : location.origin + src },
+        { type: 'mpegts', isLive: ch.kind === 'live', url: new URL(src, location.href).href },
         { enableWorker: true, lazyLoad: false, liveBufferLatencyChasing: true, liveBufferLatencyMaxLatency: 8, liveBufferLatencyMinRemain: 2, autoCleanupSourceBuffer: true }
       );
       let reloads = 0;

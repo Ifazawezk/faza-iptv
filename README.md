@@ -1,5 +1,7 @@
 # Faza IPTV
 
+![Faza IPTV](docs/banner.png)
+
 A free, open-source IPTV player for **Windows, macOS, Linux, Android, TVs** and **any phone browser**.
 Bring your own playlist: an **Xtream Codes** login (server + username + password) or an **M3U / M3U8** link or file.
 
