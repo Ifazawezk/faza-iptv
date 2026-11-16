@@ -4,7 +4,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="$ROOT/android/.build"
-VERSION="$(node -p "require('$ROOT/package.json').version")"
+VERSION="$(cd "$ROOT" && node -p "require('./package.json').version")"
 
 rm -rf "$WORK"
 npx --yes cordova@12.0.0 create "$WORK" io.github.ifazawezk.fazaiptv "Faza IPTV"

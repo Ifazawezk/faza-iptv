@@ -30,7 +30,7 @@ Go to **[Releases](../../releases/latest)** and pick your file:
 | Windows (installer) | `Faza-IPTV-Setup-x.y.z.exe` |
 | Windows (no install) | `Faza-IPTV-Portable-x.y.z.exe` |
 | macOS | `Faza-IPTV-x.y.z-mac.dmg` (first launch: right-click › Open) |
-| Linux | `Faza-IPTV-x.y.z-linux.AppImage` |
+| Linux | `Faza-IPTV-x.y.z-linux.AppImage` or `Faza-IPTV-x.y.z-linux-x64.tar.gz` (extract, run `./faza-iptv`) |
 | Android phones & tablets | `Faza-IPTV-x.y.z-android.apk` (allow "install unknown apps") |
 | Android TV, Google TV, Fire TV | same `.apk`, see *TVs* below |
 | iPhone / iPad, Samsung & LG TVs | use the *hosted version* or *Phone mode* below |
