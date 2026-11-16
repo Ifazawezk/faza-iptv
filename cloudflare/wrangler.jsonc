@@ -10,6 +10,8 @@
     "binding": "ASSETS",
     "run_worker_first": true
   },
+  // "true" = the app asks for the ACCESS_KEY password once per device; "false" = open to anyone with the link.
+  "vars": { "REQUIRE_PASSWORD": "true" },
   "workers_dev": true,
   "preview_urls": false
 }

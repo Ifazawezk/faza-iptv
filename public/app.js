@@ -238,7 +238,7 @@ async function showAccount(src) {
     const u = info.user_info || {};
     const exp = u.exp_date && Number(u.exp_date) ? new Date(Number(u.exp_date) * 1000).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'never';
     const ok = String(u.status).toLowerCase() === 'active';
-    el.innerHTML = `<span class="${ok ? 'ok' : 'bad'}">● ${esc(u.status || 'Unknown')}</span> · expires ${esc(exp)}<br>connections ${esc(u.active_cons ?? '?')}/${esc(u.max_connections ?? '?')}`;
+    el.innerHTML = `<span class="${ok ? 'ok' : 'bad'}">● ${esc(u.status || 'Unknown')}</span> · expires ${esc(exp)}<span class="ac2">connections ${esc(u.active_cons ?? '?')}/${esc(u.max_connections ?? '?')}</span>`;
   } catch {
     el.innerHTML = '<span class="bad">● Can\'t reach provider</span>';
   }
