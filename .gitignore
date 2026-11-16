@@ -3,3 +3,4 @@ dist/
 android/.build/
 *.log
 .DS_Store
+.claude/

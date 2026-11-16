@@ -79,6 +79,7 @@ const saveSources = () => LS.set('sources', state.sources);
    relaxed, so playlists and streams are requested directly. */
 const DIRECT = location.protocol === 'file:';
 const HAS_MSE = !!(window.MediaSource || window.ManagedMediaSource);
+const HOSTED = !DIRECT && location.protocol === 'https:'; // the online (Cloudflare) version
 const uaParam = ua => (ua ? '&ua=' + encodeURIComponent(ua) : '');
 const streamSrc = (url, ua) => (DIRECT ? url : '/proxy?url=' + encodeURIComponent(url) + uaParam(ua));
 async function getText(url, ua) {
@@ -89,6 +90,7 @@ async function getText(url, ua) {
     return r.text();
   }
   const r = await fetch('/api/fetch?url=' + encodeURIComponent(url) + uaParam(ua));
+  if (r.status === 401) { location.href = '/'; throw new Error('Please sign in again.'); } // hosted version: session ended
   const body = await r.text();
   if (!r.ok) throw new Error(r.status === 502 ? body : `The provider returned an error (HTTP ${r.status}).`);
   return body;
@@ -281,6 +283,7 @@ async function loadSource(force = false) {
     }
     renderTabs(); renderGroups(); renderList();
     if (!state.current) showIdle();
+    if (document.body.classList.contains('tv') && (!document.activeElement || document.activeElement === document.body)) focusList();
   } catch (e) {
     if (token !== state.loadToken) return;
     $('#channels').innerHTML = `<div class="empty">Couldn't load this playlist.<br><br>${esc(e.message)}<br><br><button id="retryLoad">Try again</button></div>`;
@@ -353,7 +356,7 @@ function renderGroups() {
   const favCount = d.items.filter(i => favs.has(i.key)).length;
   const q = state.groupQuery.trim().toLowerCase();
   const row = (id, label, n, cls = '') =>
-    `<div class="g ${cls} ${state.group === id ? 'on' : ''}" data-g="${esc(id)}"><span>${esc(label)}</span><span class="n">${n ?? ''}</span></div>`;
+    `<div class="g ${cls} ${state.group === id ? 'on' : ''}" data-g="${esc(id)}" tabindex="0"><span>${esc(label)}</span><span class="n">${n ?? ''}</span></div>`;
   let html = '';
   if (!q) {
     html += row('__all', 'All', d.items.length, 'special');
@@ -423,7 +426,7 @@ function renderMore() {
     const it = state.list[i];
     const playing = state.current && state.current.key === it.key ? ' playing' : '';
     const sub = state.query || state.group === '__fav' || state.group === '__recent' ? `<span class="sub">${esc(it.group)}</span>` : '';
-    html += `<div class="ch${playing}" data-i="${i}">
+    html += `<div class="ch${playing}" data-i="${i}" tabindex="0">
       ${state.tab === 'live' && !state.seriesView ? `<span class="num">${i + 1}</span>` : ''}
       ${logoHtml(it)}
       <div class="name" title="${esc(it.name)}">${esc(it.name)}${sub}</div>
@@ -500,6 +503,8 @@ async function playPlan(ch) {
   if (DIRECT) return [['hls', ch.url], ['mpegts', ch.url], ['native', ch.url]];
   // Unknown type: ask the server to peek at the stream.
   const r = await fetch('/api/probe?url=' + encodeURIComponent(ch.url) + uaParam(ch.ua)).then(x => x.json()).catch(() => ({ ok: false, status: 0 }));
+  // Hosted version: the provider may block cloud servers but still allow this device directly.
+  if (!r.ok && HOSTED && /^https:/i.test(ch.url)) return [['hls', ch.url], ['mpegts', ch.url], ['native', ch.url]];
   if (!r.ok) {
     const e = new Error(r.status ? `HTTP ${r.status}` : (r.error || 'unreachable'));
     e.status = r.status;
@@ -513,7 +518,7 @@ async function playPlan(ch) {
 
 function explain(err) {
   const s = err && err.status;
-  if (s === 401 || s === 403) return 'The provider refused this stream (HTTP ' + s + '). Your subscription may have expired, or another device is using your connection limit.';
+  if (s === 401 || s === 403) return 'The stream refused the connection (HTTP ' + s + '). It may be blocked in your country, your subscription may have expired, or another device may be using your connection limit.';
   if (s === 404) return 'This stream was not found (HTTP 404). The channel may be offline.';
   if (s === 458 || s === 456 || s === 429) return 'Too many connections. Close the stream on other devices and try again.';
   if (s >= 500) return 'The stream server had an error (HTTP ' + s + '). Try again in a moment.';
@@ -539,12 +544,15 @@ async function play(ch) {
     return;
   }
   if (token !== state.playToken) return;
+  // Hosted version: secure (https) streams are tried straight from this device first
+  // (faster, uses your own connection); the Cloudflare relay is the fallback.
+  plan = plan.flatMap(([engine, url]) => (HOSTED && /^https:/i.test(url) ? [[engine, url, true], [engine, url, false]] : [[engine, url, false]]));
   let lastErr = null;
   const attempt = i => {
     if (token !== state.playToken) return;
     if (i >= plan.length) return showPlayError(ch, lastErr);
-    const [engine, url] = plan[i];
-    const src = streamSrc(url, ch.ua);
+    const [engine, url, direct] = plan[i];
+    const src = direct ? url : streamSrc(url, ch.ua);
     let started = false;
     const next = err => {
       if (token !== state.playToken || started) return;
@@ -584,7 +592,7 @@ async function play(ch) {
     } else if (engine === 'mpegts') {
       if (!window.mpegts || !mpegts.getFeatureList().mseLivePlayback) return next(new Error('MPEG-TS not supported'));
       ts = mpegts.createPlayer(
-        { type: 'mpegts', isLive: ch.kind === 'live', url: DIRECT ? src : location.origin + src },
+        { type: 'mpegts', isLive: ch.kind === 'live', url: new URL(src, location.href).href },
         { enableWorker: true, lazyLoad: false, liveBufferLatencyChasing: true, liveBufferLatencyMaxLatency: 8, liveBufferLatencyMinRemain: 2, autoCleanupSourceBuffer: true }
       );
       let reloads = 0;
@@ -830,7 +838,9 @@ $('#groups').addEventListener('click', e => {
   state.group = g.dataset.g;
   state.seriesView = null;
   if (state.query) { state.query = ''; $('#search').value = ''; }
+  const hadFocus = document.activeElement === g;
   renderGroups(); renderList();
+  if (hadFocus) { const again = document.querySelector(`.g[data-g="${CSS.escape(state.group)}"]`); if (again) again.focus({ preventScroll: true }); }
 });
 $('#groupSearch').addEventListener('input', e => { state.groupQuery = e.target.value; renderGroups(); });
 let searchTimer;
@@ -856,7 +866,9 @@ $('#channels').addEventListener('click', e => {
   const row = e.target.closest('.ch');
   if (!row) return;
   const it = state.list[Number(row.dataset.i)];
-  if (it.isSeries) openSeries(it); else play(it);
+  if (it.isSeries) openSeries(it);
+  else if (state.current && state.current.key === it.key && overlay.hidden) toggleFullscreen(); // OK twice = fullscreen
+  else play(it);
 });
 $('#info').addEventListener('click', e => {
   const b = e.target.closest('[data-act]');
@@ -878,16 +890,103 @@ function toggleFullscreen() {
 }
 video.addEventListener('dblclick', e => { e.preventDefault(); toggleFullscreen(); });
 
+/* ---------- TV & remote control ----------
+   Arrow keys move a highlight between buttons, groups and channels (spatial navigation);
+   OK/Enter activates. With nothing highlighted (or in fullscreen) Up/Down change channel. */
+const NAV_SEL = '.top button, .top select, #search, #tabs button, #groupSearch, .g, #chhead button, .ch, .np-actions button, .overlay button';
+const ARROWS = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+
+function moveFocus(from, key) {
+  const [dx, dy] = ARROWS[key];
+  const r = from.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  let best = null, bestScore = Infinity;
+  for (const el of document.querySelectorAll(NAV_SEL)) {
+    if (el === from || el.disabled || !el.offsetParent) continue;
+    const c = el.getBoundingClientRect();
+    if (!c.width || !c.height) continue;
+    // must lie in the pressed direction
+    if (dx > 0 && c.left < r.right - 2) continue;
+    if (dx < 0 && c.right > r.left + 2) continue;
+    if (dy > 0 && c.top < r.bottom - 2) continue;
+    if (dy < 0 && c.bottom > r.top + 2) continue;
+    const ex = c.left + c.width / 2, ey = c.top + c.height / 2;
+    const primary = dx ? Math.abs(ex - cx) : Math.abs(ey - cy);
+    const secondary = dx ? Math.max(0, Math.abs(ey - cy) - c.height / 2) : Math.max(0, Math.abs(ex - cx) - c.width / 2);
+    const score = primary + secondary * 3;
+    if (score < bestScore) { bestScore = score; best = el; }
+  }
+  if (best) {
+    best.focus({ preventScroll: true });
+    best.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+  return !!best;
+}
+
+function focusList() {
+  const el = document.querySelector('.ch.playing') || document.querySelector('.ch') || document.querySelector('.g.on');
+  if (el) { el.focus({ preventScroll: true }); el.scrollIntoView({ block: 'nearest' }); }
+}
+
+// Back / Escape / remote "Return": close things one level at a time. Returns true if handled.
+function goBack() {
+  if (dlg.open) { dlg.close(); return true; }
+  if (document.fullscreenElement) { document.exitFullscreen(); return true; }
+  if (state.seriesView) { state.seriesView = null; renderList(); focusList(); return true; }
+  if (state.query) { state.query = ''; $('#search').value = ''; renderList(); focusList(); return true; }
+  return false;
+}
+
+const BACK_CODES = new Set([10009 /* Samsung */, 461 /* LG */, 8 /* Backspace */, 27 /* Esc */]);
 document.addEventListener('keydown', e => {
-  const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
-  if (e.key === 'Escape' && document.activeElement === $('#search')) { $('#search').blur(); return; }
-  if (typing || dlg.open || e.ctrlKey || e.altKey || e.metaKey) return;
+  const a = document.activeElement || document.body;
+  const typing = /^(INPUT|TEXTAREA)$/.test(a.tagName);
+  if (e.key === 'Escape' && typing) { a.blur(); return; }
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+  if (!typing && (e.key === 'GoBack' || e.key === 'BrowserBack' || BACK_CODES.has(e.keyCode))) {
+    if (goBack()) e.preventDefault();
+    return;
+  }
+  if (dlg.open || typing) return;
+  if (e.key === 'ChannelUp' || e.key === 'MediaTrackNext') { e.preventDefault(); return zap(1); }
+  if (e.key === 'ChannelDown' || e.key === 'MediaTrackPrevious') { e.preventDefault(); return zap(-1); }
+  if (e.key === 'MediaPlayPause' || e.key === 'MediaPlay' || e.key === 'MediaPause') { e.preventDefault(); video.paused ? video.play().catch(() => {}) : video.pause(); return; }
+  if ((e.key === 'Enter' || e.key === ' ') && a.matches && a.matches('.ch, .g')) { e.preventDefault(); a.click(); return; }
+  const onNav = a !== document.body && a.matches && a.matches(NAV_SEL) && !document.fullscreenElement;
+  if (ARROWS[e.key] && onNav) {
+    if (a.tagName === 'SELECT' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return; // let the dropdown work
+    e.preventDefault();
+    moveFocus(a, e.key);
+    return;
+  }
   if (e.key === '/') { e.preventDefault(); $('#search').focus(); }
   else if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); zap(1); }
   else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); zap(-1); }
+  else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !document.fullscreenElement) { e.preventDefault(); focusList(); }
   else if (e.key === 'f' || e.key === 'F') toggleFullscreen();
   else if (e.key === 'm' || e.key === 'M') video.muted = !video.muted;
 });
+
+// TV mode: big text + remote-friendly. On automatically on TVs; the "TV" button toggles it.
+const TV_UA = /Android TV|GoogleTV|BRAVIA|AFT[A-Z]|SmartTV|SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|CrKey|Large Screen/i;
+function setTvMode(on) {
+  document.body.classList.toggle('tv', on);
+  $('#tvBtn').classList.toggle('on', on);
+}
+setTvMode(LS.get('tvMode', null) ?? (TV_UA.test(navigator.userAgent) || new URLSearchParams(location.search).has('tv')));
+$('#tvBtn').onclick = () => { const on = !document.body.classList.contains('tv'); LS.set('tvMode', on); setTvMode(on); };
+
+// Android app: the hardware Back button goes through Cordova.
+if (DIRECT && /Android/i.test(navigator.userAgent)) {
+  const s = document.createElement('script');
+  s.src = 'cordova.js';
+  s.onload = () => document.addEventListener('deviceready', () => {
+    document.addEventListener('backbutton', () => {
+      if (!goBack() && navigator.app) navigator.app.exitApp();
+    }, false);
+  });
+  document.head.appendChild(s);
+}
 
 let toastTimer;
 function toast(msg) {

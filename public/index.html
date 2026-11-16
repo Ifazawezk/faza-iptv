@@ -18,12 +18,13 @@
 </head>
 <body>
   <header class="top">
-    <div class="brand"><img src="icon.svg" alt=""> <span>Faza IPTV</span></div>
+    <div class="brand"><img src="icon.svg" alt=""> <span class="wm">Faza <b>IPTV</b></span></div>
     <div class="source">
       <select id="sourceSel" title="Your playlists"></select>
       <button id="addBtn" class="primary">+ Add</button>
       <button id="refreshBtn" class="icon" title="Reload playlist from the provider">&#x27F3;</button>
       <button id="delBtn" class="icon" title="Remove this playlist">&#x2715;</button>
+      <button id="tvBtn" class="icon" title="TV mode: big text, remote-control friendly">TV</button>
     </div>
     <input id="search" class="search" type="search" placeholder="Search  ( / )" autocomplete="off">
     <div id="acct" class="acct"></div>
@@ -47,7 +48,7 @@
         <div class="overlay" id="overlay"></div>
       </div>
       <div class="info" id="info"></div>
-      <div class="keys muted">Keys: <b>&uarr;/&darr;</b> change channel &middot; <b>F</b> fullscreen &middot; <b>M</b> mute &middot; <b>/</b> search</div>
+      <div class="keys muted">Keys: <b>arrows</b> move &middot; <b>Enter</b> play (twice = fullscreen) &middot; <b>Back/Esc</b> return &middot; <b>&uarr;/&darr;</b> in fullscreen change channel &middot; <b>F</b> fullscreen &middot; <b>M</b> mute &middot; <b>/</b> search</div>
     </section>
   </main>
 

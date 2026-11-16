@@ -1,0 +1,15 @@
+// Cloudflare Worker config for the hosted version of Faza IPTV (free plan).
+// Deploy:  cd cloudflare && npx wrangler deploy
+// Password: npx wrangler secret put ACCESS_KEY
+{
+  "name": "faza-iptv",
+  "main": "worker.js",
+  "compatibility_date": "2025-06-01",
+  "assets": {
+    "directory": "../public",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "workers_dev": true,
+  "preview_urls": false
+}
